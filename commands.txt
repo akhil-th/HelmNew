@@ -1,0 +1,961 @@
+    1  az account set --subscription 4de92c59-23a3-40e3-8eca-ee722c015508
+    2  az aks get-credentials --resource-group Kube_cluster --name KubeDemo
+    3  # List all deployments in all namespaces
+    4  kubectl get deployments --all-namespaces=true
+    5  kubectl get nodes
+    6  kubectl get pods
+    7  kubectl get nodes
+    8  kubectl getns
+    9  kubectl get namespace
+   10  # List all deployments in all namespaces
+   11  kubectl get deployments --all-namespaces=true
+   12  REGION_NAME=eastus
+   13  RESOURCE_GROUP=aksworkshop
+   14  SUBNET_NAME=aks-subnet
+   15  VNET_NAME=aks-vnet
+   16  echo $REGION_NAME
+   17  az group create     --name $RESOURCE_GROUP     --location $REGION_NAME
+   18  az network vnet create     --resource-group $RESOURCE_GROUP     --location $REGION_NAME     --name $VNET_NAME     --address-prefixes 10.0.0.0/8     --subnet-name $SUBNET_NAME     --subnet-prefixes 10.240.0.0/16
+   19  SUBNET_ID=$(az network vnet subnet show \
+   20      --resource-group $RESOURCE_GROUP \
+   21      --vnet-name $VNET_NAME \
+   22      --name $SUBNET_NAME \
+   23      --query id -o tsv)
+   24  echo $(SUBNET_ID)
+   25  echo SUBNET_ID
+   26  echo $SUBNET_ID
+   27  az aks get-versions
+   28  az aks get-versions --LOCATION
+   29  az aks get-versions --location eastus
+   30  VERSION=$(az aks get-versions \
+   31      --location $REGION_NAME \
+   32      --query 'orchestrators[?!isPreview] | [-1].orchestratorVersion' \
+   33      --output tsv)
+   34  echo VERSION
+   35  echo $VERSION
+   36  AKS_CLUSTER_NAME=aksworkshop-$RANDOM
+   37  echo $AKS_CLUSTER_NAME
+   38  az aks create --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER_NAME --vm-set-type VirtualMachineScaleSets --node-count 2 --load-balancer-sku standard --location $REGION_NAME --kubernetes-version $VERSION --network-plugin azure --vnet-subnet-id $SUBNET_ID --service-cidr 10.2.0.0/24 --dns-service-ip 10.2.0.10 --docker-bridge-address 172.17.0.1/16 --generate-ssh-keys
+   39  az aks get-credentials     --resource-group $RESOURCE_GROUP     --name $AKS_CLUSTER_NAME
+   40  kubectl get nodes
+   41  kubectl get namespace
+   42  kubectl create namespace ratingsapp
+   43  ACR_NAME=acr$RANDOM
+   44  echo $ACR_NAME
+   45  az acr create     --resource-group $RESOURCE_GROUP     --location $REGION_NAME     --name $ACR_NAME     --sku Standard
+   46  git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-api.git
+   47  cd mslearn-aks-workshop-ratings-api
+   48  az acr build     --resource-group $RESOURCE_GROUP     --registry $ACR_NAME     --image ratings-api:v1 .
+   49  cd ~
+   50  git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-web.git
+   51  cd mslearn-aks-workshop-ratings-web
+   52  az acr build     --resource-group $RESOURCE_GROUP     --registry $ACR_NAME     --image ratings-web:v1 .
+   53  az acr repository list     --name $ACR_NAME     --output table
+   54  npm
+   55  ls
+   56  cd .
+   57  ls
+   58  cd ..
+   59  ls
+   60  rm -rf mslearn-aks-workshop-ratings-web
+   61  ls
+   62  git clone https://github.com/MicrosoftDocs/mslearn-aks-workshop-ratings-web.git
+   63  cd mslearn-aks-workshop-ratings-web
+   64  az acr build     --resource-group $RESOURCE_GROUP     --registry $ACR_NAME     --image ratings-web:v1 .
+   65  az acr repository list     --name $ACR_NAME     --output table
+   66  az aks update     --name $AKS_CLUSTER_NAME     --resource-group $RESOURCE_GROUP     --attach-acr $ACR_NAME
+   67  helm repo add bitnami https://charts.bitnami.com/bitnami
+   68  helm search repo bitnami
+   69  helm install ratings bitnami/mongodb \ 
+   70  cd ..
+   71  ls
+   72  cd mslearn-aks-workshop-ratings-web
+   73  ls
+   74  cd ..
+   75  cd mslearn-aks-workshop-ratings-api
+   76  ls
+   77  cd ..
+   78  helm repo add bitnami https://charts.bitnami.com/bitnami
+   79  helm search repo bitnami
+   80  helm install ratings bitnami/mongodb \  --namespace ratingsapp \ --set auth.username=akhil,auth.password=akhil1994,auth.database=ratingsdb
+   81  cd /opt/bitnami/mongodb/
+   82  cd /opt
+   83  ls
+   84  helm uninstall
+   85  cd..
+   86  cd ..
+   87  helm uninstall
+   88  helm uninstall ratings --namespace ratingsapp
+   89  ls
+   90  cd ~
+   91  ls
+   92  helm uninstall ratings --namespace ratingsapp
+   93  cd mslearn-aks-workshop-ratings-web
+   94  helm uninstall ratings --namespace ratingsapp
+   95  cd ..
+   96  cd /bitnami
+   97  helm search repo bitnami
+   98  kubectl get namespaces
+   99  helm install ratings bitnami/mongodb \ 
+  100  ls
+  101  helm install my-release bitnami/mongodb  --namespace ratingsapp --set auth.username=akhil,auth.password=akhil1994,auth.database=ratingsdb
+  102  kubectl create secret generic mongosecret     --namespace ratingsapp     --from-literal=MONGOCONNECTION="mongodb://akhil:akhil1994@my-release-mongodb.ratingsapp:27017/ratingsdb"
+  103  kubectl describe secret mongosecret --namespace ratingsapp
+  104  kubectl getpods
+  105  kubectl get pods
+  106  code ratings-api-deployment.yaml
+  107  kubectl apply     --namespace ratingsapp     -f ratings-api-deployment.yaml
+  108  kubectl get pods     --namespace ratingsapp     -l app=ratings-api -w
+  109  kubectl get deployment ratings-api --namespace ratingsapp
+  110  code ratings-api-service.yaml
+  111  kubectl apply     --namespace ratingsapp     -f ratings-api-service.yaml
+  112  kubectl get service ratings-api --namespace ratingsapp
+  113  kubectl get endpoints ratings-api --namespace ratingsapp
+  114  code ratings-web-deployment.yaml
+  115  kubectl apply --namespace ratingsapp -f ratings-web-deployment.yaml
+  116  kubectl get pods --namespace ratingsapp -l app=ratings-web -w
+  117  kubectl get deployment ratings-web --namespace ratingsapp
+  118  code ratings-web-service.yaml
+  119  kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+  120  kubectl get service ratings-web --namespace ratingsapp -w
+  121  kubectl get pods
+  122  az
+  123  kubectl get namespaces
+  124  kubectl get pods -namespaces ratingapp
+  125  kubectl get pods --namespaces ratingapp
+  126  az
+  127  az vm deallocate --ids $(az vm list -g aksworkshop --query "[].id" -o tsv)
+  128  az vmss deallocate  --resource-group aksworkshop
+  129  az vmss deallocate  --resource-group aksworkshop --name $RESOURCE_GROUP
+  130  az vmss deallocate  --resource-group $RESOURCE_GROUP
+  131  ls
+  132  cat ratings-web-service.yaml 
+  133  cat ratings-api-service.yaml 
+  134  kubectl create namespace ingress
+  135  helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+  136  helm install nginx-ingress stable/nginx-ingress     --namespace ingress     --set controller.replicaCount=2     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+  137  kubectl --namespace ingress get services -o wide -w nginx-ingress-controller
+  138  kubectl --namespace ingress get services -o wide -w ratings-web-service.yaml 
+  139  kubectl --namespace ratingsapp  get services -o wide -w ratings-web-service.yaml 
+  140  ls
+  141  cat ratings-web-service.yaml 
+  142  code ratings-web-service.yaml
+  143  kubectl delete service     --namespace ratingsapp     ratings-web
+  144  kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+  145  kubectl delete service     --namespace ratingsapp     ratings-web
+  146  ls
+  147  cat ratings-web-service.yaml 
+  148  kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+  149  kubectl apply     --namespace ratingsapp     -f ratings-web-service.yaml
+  150  code ratings-web-ingress.yaml
+  151  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  152  cat ratings-web-service.yaml 
+  153  code ratings-web-ingress.yaml
+  154  kubectl get namespaces
+  155  kubectl create namespace cert-manager
+  156  helm repo add jetstack https://charts.jetstack.io
+  157  helm repo update
+  158  kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  159  helm install cert-manager     --namespace cert-manager     --version v0.14.0     jetstack/cert-manager
+  160  kubectl get pods --namespace cert-manager
+  161  ls
+  162  code cluster-issuer.yaml
+  163  kubectl apply     --namespace ratingsapp     -f cluster-issuer.yaml
+  164  ls
+  165  code ratings-web-ingress.yaml
+  166  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  167  kubectl describe cert ratings-web-cert --namespace ratingsapp
+  168  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  169  code ratings-web-ingress.yaml
+  170  kubectl describe cert ratings-web-cert --namespace ratingsapp
+  171  code ratings-web-ingress.yaml
+  172  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  173  code ratings-web-ingress.yaml
+  174  ls
+  175  code ratings-web-ingress.yaml
+  176  kubectl get service nginx-ingress-controller --namespace ingress -w
+  177  code ratings-web-ingress.yaml
+  178  ls
+  179  kubectl get namespaces
+  180  kubectl get ns
+  181  kubectl delete --namespaces cert-manager
+  182  kubectl get ns
+  183  kubectl delete service     --namespace ratingsapp \
+  184  kubectl delete --namespace cert-manager
+  185  kubectl delete -f --namespace cert-manager
+  186  kubectl get pods --namespace cert-manager
+  187  ls
+  188  helm install cert-manager     --namespace cert-manager     --version v0.14.0 \
+  189  helm delete cert-manager     --namespace cert-manager     --version v0.14.0     jetstack/cert-manager
+  190  helm delete cert-manager     --namespace cert-manager     jetstack/cert-manager
+  191  helm delete cert-manager     --namespace cert-manager     cert-manager
+  192  kubectl get ns
+  193  kubectl delete ns -n cert-manager
+  194  kubectl get all -n cert-manager
+  195  kubectl get deployments -n cert-manager
+  196  kubectl get-all -n cert-manager
+  197  kubectl get-all 
+  198  kubectl get all 
+  199  kubectl delete deployment -n cert-manager
+  200  kubectl delete --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  201  kubectl delete -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  202  kubectl get ns
+  203  kubectl get po -n
+  204  kubectl get po -n cert-manager
+  205  helm --namespace cert-manager delete cert-manager
+  206  kubectl delete namespace cert-manager
+  207  kubectl get ns
+  208  ls
+  209  rm rm cluster-issuer.yaml 
+  210  rm cluster-issuer.yaml 
+  211  ls
+  212  code ratings-web-ingress.yaml 
+  213  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  214  helm install nginx-ingress stable/nginx-ingress     --namespace ingress     --set controller.replicaCount=2     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+  215  helm delete nginx-ingress stable/nginx-ingress     --namespace ingress     --set controller.replicaCount=2     --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux     --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+  216  kubectl get service nginx-ingress-controller --namespace ingress -w
+  217  cat ratings-web-ingress.yaml 
+  218  kubectl delete service     --namespace ingress    ratings-web-ingress
+  219  kubectl delete     --namespace ingress    ratings-web-ingress
+  220  cat ratings-web-ingress.yaml 
+  221  code ratings-web-ingress.yaml 
+  222  kubectl get service nginx-ingress-controller --namespace ingress -w
+  223  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  224  code ratings-web-ingress.yaml 
+  225  WORKSPACE=aksworkshop-workspace-$RANDOM
+  226  az resource create --resource-type Microsoft.OperationalInsights/workspaces         --name $WORKSPACE         --resource-group $RESOURCE_GROUP         --location $REGION_NAME         --properties '{}' -o table
+  227  echo $WORKSPACE
+  228  echo $RESOURCE_GROUP
+  229  echo $REGION_NAME
+  230  az resource create --resource-type Microsoft.OperationalInsights/workspaces         --name $WORKSPACE         --resource-group $RESOURCE_GROUP         --location $REGION_NAME         --properties '{}' -o table
+  231  AZ
+  232  az
+  233  echo $REGION_NAME
+  234  REGION_NAME=eastus
+  235  RESOURCE_GROUP=aksworkshop
+  236  echo $REGION_NAME
+  237  az resource create --resource-type Microsoft.OperationalInsights/workspaces         --name $WORKSPACE         --resource-group $RESOURCE_GROUP         --location $REGION_NAME         --properties '{}' -o table
+  238  WORKSPACE_ID=$(az resource show --resource-type Microsoft.OperationalInsights/workspaces \
+  239      --resource-group $RESOURCE_GROUP \
+  240      --name $WORKSPACE \
+  241      --query "id" -o tsv)
+  242  az aks enable-addons     --resource-group $RESOURCE_GROUP     --name $AKS_CLUSTER_NAME     --addons monitoring     --workspace-resource-id $WORKSPACE_ID
+  243  AKS_CLUSTER_NAME=aksworkshop-18203
+  244  az aks enable-addons     --resource-group $RESOURCE_GROUP     --name $AKS_CLUSTER_NAME     --addons monitoring     --workspace-resource-id $WORKSPACE_ID
+  245  kubectl get nodes
+  246  kubectl get ns
+  247  kubectl get pods --namespace ratingsapp
+  248  kubectl get pods --namespace ingress
+  249  kubectl get ns
+  250  kubectl create namespace cert-manager
+  251  helm repo add jetstack https://charts.jetstack.io
+  252  helm repo update
+  253  kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  254  helm install cert-manager     --namespace cert-manager     --version v0.14.0     jetstack/cert-manager
+  255  kubctl get ns
+  256  ls
+  257  code mslearn-aks-workshop-ratings-web
+  258  ls
+  259  code ratings-web-deployment.yaml 
+  260  code ratings-api-deployment.yaml 
+  261  code ratings-web-deployment.yaml 
+  262  kubectl get ns
+  263  pwd
+  264  helm create
+  265  helm create chartsPoc
+  266  ls
+  267  cd chartsPoc/
+  268  ls
+  269  cd templates/
+  270  ls
+  271  code deployment.yaml 
+  272  cd ..
+  273  code ratings-web-service.yaml 
+  274  code ratings-web-deployment.yaml 
+  275  kubectl get pods
+  276  kubectl get pods --namespace ratingsapp
+  277  kubectl logs 
+  278  kubectl logs -f -p ratings-web-6d9884fcf7-v97sp
+  279  kubectl logs -f -p ratings-web-5c68f84dc8-48kt8
+  280  kubectl get pods --namespace ratingsapp
+  281  cd chartsPoc/
+  282  ls
+  283  cd charts/
+  284  ls
+  285  cd ..
+  286  cd templates/
+  287  ls
+  288  cd ..
+  289  ls
+  290  pwd
+  291  cp ratings-api-deployment.yaml /chartsPoc/templates
+  292  mv ratings-api-deployment.yaml /chartsPoc/templates
+  293  cd chartsPoc/
+  294  ls
+  295  cd chartsPoc/cd ..
+  296  cd ..
+  297  cp ratings-api-deployment.yaml /chartsPoc/templates/
+  298  cp ratings-api-deployment.yaml /chartsPoc/templates/ratings-api-deployment.yaml
+  299  git
+  300  az
+  301  kubectl get pods
+  302  kubectl get pods --namespace raitingsapp
+  303  kubectl get ns
+  304  kubectl get pods --namespace ratingsapp
+  305  ls
+  306  code ratings-api-deployment.yaml 
+  307  kubectl get pods --namespace ratingsapp
+  308  ls
+  309  ls chartsPoc/templates/
+  310  pwd
+  311  ls
+  312  cp *.yaml chartsPoc/templates/ 
+  313  ls chartsPoc/templates/
+  314  git init
+  315  git add -A
+  316  git status
+  317  git commit -m "push to azure repo"
+  318  git config --global user.email "akhil.th1994@gmail.com"
+  319  git config --global user.name "akhil"
+  320  git commit -m "push to azure repo"
+  321  git remote add https://WorshopDemo@dev.azure.com/WorshopDemo/Workshop/_git/HelmCharts
+  322  git clone https://WorshopDemo@dev.azure.com/WorshopDemo/Workshop/_git/HelmCharts.akhil.th
+  323  ls
+  324  rm -f HelmCharts.akhil.th
+  325  rm  HelmCharts.akhil.th
+  326  rm  -rf HelmCharts.akhil.th
+  327  ls
+  328  cd chartsPoc/
+  329  tem
+  330  cd templates/
+  331  ls
+  332  git clone https://WorshopDemo@dev.azure.com/WorshopDemo/Workshop/_git/HelmCharts.akhil.th
+  333  ls
+  334  cp *.yaml HelmCharts.akhil.th/
+  335  ls HelmCharts.akhil.th/
+  336  cd HelmCharts.akhil.th/
+  337  git add -A
+  338  git status 
+  339  git commit -m "push to azure repo"
+  340  git push -u origin master
+  341  echo SUBNET_ID
+  342  echo SUBNET_NAME
+  343  ls
+  344  cd chartsPoc/templates/
+  345  ls
+  346  cd HelmCharts.akhil.th/
+  347  ls
+  348  git init 
+  349  git add -a 
+  350  git add -A
+  351  git status
+  352  git commit -m "push to git repo"
+  353  git remote add https://github.com/akhil-th/HemlRepo.git
+  354  git push -u origin
+  355  cd ..
+  356  cd HelmCharts.akhil.th/
+  357  cd ..
+  358  ls
+  359  rm -rf HelmCharts.akhil.th/
+  360  ls
+  361  git clone https://github.com/akhil-th/HemlRepo.git
+  362  ls
+  363  rm -rf HemlRepo/
+  364  ls
+  365  git clone https://github.com/akhil-th/HemlRepo.git
+  366  ls
+  367  cp *.yaml HemlRepo/
+  368  cd HemlRepo/
+  369  ls
+  370  git add -A
+  371  git commit -m "push to github"
+  372  git push -u origin master
+  373  az
+  374  kubectl get pods -namespace ratingsapp
+  375  kubectl get pods --namespace ratingsapp
+  376  kubectl delete pod ratings-web-75f7bb9f75-6xg7t --namespace ratingsapp
+  377  kubectl get pods --namespace ratingsapp
+  378  kubectl delete pod ratings-api-869f495775-mhh5p --namespace ratingsapp
+  379  kubectl get pods --namespace ratingsapp
+  380  kubectl get nodes
+  381  kubectl delete node aks-nodepool1-32908207-vmss000000
+  382  kubectl get nodes
+  383  kubectl get pods --namespace ratingsapp
+  384  kubectl get nodes
+  385  az aks update --name $AKS_CLUSTER_NAME
+  386  kubectl get nodes
+  387  kubectl get ns
+  388  kubectl delete --namespace cert-manager
+  389  kubectl describe deployments --namespace ratingsapp
+  390  ls
+  391  kubectl describe deployments --name ratings-web-deployment.yaml 
+  392  kubectl describe deployments ratings-web-deployment --namespace ratingsapp
+  393  kubectl describe deployments ratings-web --namespace ratingsapp
+  394  kubectl describe service ratings-web --namespace ratingsapp
+  395  ls
+  396  cd chartsPoc/templates/
+  397  lsa
+  398  ls
+  399  helm
+  400  helm --version
+  401  az
+  402  ls
+  403  rm -rf chartsPoc
+  404  ls
+  405  helm version
+  406  helm repo update
+  407  helm install chartsPoc
+  408  history
+  409  helm create ChartsPoc
+  410  ls
+  411  rm -rf ChartsPoc/
+  412  ls
+  413  helm create chartsPoc
+  414  ls
+  415  cd chartsPoc/
+  416  ls
+  417  cd templates/
+  418  ls
+  419  rm *.yaml
+  420  ls
+  421  rm Notes.txt _helpers.tpl tests/
+  422  ls
+  423  rm -rf NOTES.txt tests/
+  424  ls
+  425  cd ..
+  426  ls
+  427  cp *.yaml chartsPoc/templates/
+  428  ls chartsPoc/templates/
+  429  helm install
+  430  helm install chartsPoc
+  431  az
+  432  kubectl get ns
+  433  kubectl get pods
+  434  kubectl get pods -n ratingsapp
+  435  kubectl get ns
+  436  ls
+  437  helm template chartsPoc/ 
+  438  clear
+  439  ls
+  440  cd chartsPoc/
+  441  ls
+  442  cd templates/
+  443  vim ratings-api-deployment.yaml 
+  444  cat ratings-api-deployment.yaml 
+  445  cat ratings-api-deployment.yaml  | grep imge
+  446  cat ratings-api-deployment.yaml  | grep image
+  447  vim va
+  448  vim ../values.yaml 
+  449  vim ratings-api-deployment.yaml 
+  450  code ratings-api-deployment.yaml 
+  451  vim ../values.yaml 
+  452  code ../values.yaml 
+  453  clear
+  454  #cd chartsPoc/
+  455  helm template ../
+  456  ls
+  457  vim ratings-api-deployment.yaml 
+  458  ls
+  459  cd ..
+  460  ls
+  461  cd templates/
+  462  ls
+  463  code ratings-api-deployment.yaml 
+  464  helm template ../
+  465  code ratings-api-deployment.yaml 
+  466  helm template ../
+  467  kubectl get pods -n ratingsapp
+  468  history
+  469  kubectl get ns
+  470  ls
+  471  cat ratings-deployment.yaml
+  472  code ratings-web-deployment.yaml 
+  473  kubectl get pods -n ratingsapp
+  474  cat ratings-web-ingress.yaml 
+  475  cat ratings-api-service.yaml 
+  476  ls
+  477  ccd chartsPoc/
+  478  cd chartsPoc/
+  479  ls
+  480  tempfile 
+  481  cd templates/
+  482  ls
+  483  cd ..
+  484  ls
+  485  cat values.yaml 
+  486  code values.yaml 
+  487  cd templates/
+  488  ls
+  489  code ratings-api-deployment.yaml 
+  490  ls
+  491  cd ~
+  492  ls
+  493  kubectl describe secret mongosecret --namespace ratingsapp
+  494  cd chartsPoc/
+  495  ls
+  496  kubectl get secrets
+  497  kubectl get namespaces
+  498  kubectl get pods -n namespaces
+  499  kubectl get pods -n ratingsapp
+  500  cd /var
+  501  ls
+  502  cd ..
+  503  cd
+  504  ls
+  505  cd chartsPoc/templates/
+  506  ls
+  507  cd ..
+  508  code values.yaml 
+  509  ls
+  510  cat ratings-api-deployment.yaml 
+  511  code chartsPoc/values.yaml 
+  512  code chartsPoc/templates/ratings-api-deployment.yaml 
+  513  code chartsPoc/templates/ratings-web-deployment.yaml 
+  514  helm template ../
+  515  pwd
+  516  helm template ../
+  517  pwd
+  518  cd /etc/
+  519  ls
+  520  cd ~
+  521  ls
+  522  kubectl describe secret mongosecret --namespace ratingsapp
+  523  export MONGODB_ROOT_PASSWORD=$(kubectl get secret --namespace ratingsapp ratings-mongodb -o jsonpath="{.data.mongodb-root-password}" |  base64 --decode)
+  524  kubectl get secret --namespace ratingsapp ratings-mongodb -o jsonpath="{.data.mongodb-root-password}" |  base64 --decode
+  525  kubectl get secret --namespace ratingsapp
+  526  echo $MONGOCONNECTION
+  527  code chartsPoc/values.yaml 
+  528  code chartsPoc/templates/ratings-web-deployment.yaml 
+  529  cat chartsPoc/values.yaml 
+  530  helm template ../
+  531  cd /usr/csuser/clouddrive/
+  532  ls
+  533  cd /home/akhil/clouddrive
+  534  ls
+  535  az
+  536  helm template ../
+  537  helm dependecy update
+  538  helm dependency update
+  539  cd~
+  540  ls
+  541  cd ~
+  542  ls
+  543  pwd
+  544  helm dependency update
+  545  code chartsPoc/values.yaml 
+  546  code chartsPoc/templates/ratings-api-deployment.yaml 
+  547  helm delete chartsPoc
+  548  helm create Sample
+  549  ls
+  550  helm delete chart chartsPoc
+  551  helm uninstall chartsPoc
+  552  cd Sample/
+  553  helm delete chartsPoc --purge
+  554  history
+  555  cd ~
+  556  helm rm -rf chartsPoc/
+  557  helm --help
+  558  helm ls
+  559  kubectl get secret --namespace ratingsapp
+  560  helm -version
+  561  helm version
+  562  helm charts
+  563  rm -rf Sample
+  564  ls
+  565  helm template ../
+  566  rm symbolic link /usr/csuser/clouddrive
+  567  ls /clouddrive
+  568  ls clouddrive
+  569  kubectl get ingress
+  570  kubectl get ns
+  571  kubectl get ingress --namespace ingress
+  572  cd chartsPoc/templates/
+  573  ls
+  574  helm template ../
+  575  cat ratings-web-deployment.yaml 
+  576  code ratings-web-deployment.yaml 
+  577  cat ratings-api-deployment.yaml 
+  578  cd ..
+  579  code values.yaml 
+  580  cd templates/
+  581  code ratings-web-deployment.yaml 
+  582  helm template ../
+  583  cd ..
+  584  helm template
+  585  cd -
+  586  helm template ../
+  587  cd ..
+  588  helm template 
+  589  helm template ../
+  590  cd -
+  591  helm template 
+  592  helm template templates/
+  593  helm template templates/ratings-web-service.yaml 
+  594  cd templates/
+  595  ls
+  596  kubectl get pods
+  597  kubectl get ns
+  598  kubectl get pods -n ingress
+  599  ls
+  600  cd chartsPoc/
+  601  ls
+  602  helm install ../chartsPoc/ --namespace ratings --values values.yaml
+  603  helm install ratings ../chartsPoc/ --namespace ratings --values values.yaml
+  604  kubectl create --namespace rating 
+  605  kubectl create ns rating 
+  606  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  607  kubectl get pods -n rating
+  608  kubectl describe pod ratings-api-8cf45f59-65z5l -n rating
+  609  helm ls
+  610  kubectl get pods -n rating
+  611  kubectl get pods -n ratings
+  612  kubectl get pods -n rating
+  613  code chartsPoc/values.yaml 
+  614  kubectl get pods -n rating
+  615  helm upgrade ratings ../chartsPoc/ --namespace rating --values values.yaml
+  616  helm upgrade ratings /chartsPoc/ --namespace rating --values values.yaml
+  617  cd chartsPoc/
+  618  helm upgrade ratings ../chartsPoc/ --namespace rating --values values.yaml
+  619  kubectl get pods -n rating
+  620  kubectl describe pod ratings-api-869f495775-b6fkw -n rating
+  621  kubectl logs -f ratings-api-869f495775-b6fkw -n rating
+  622  kubectl get pods -n rating
+  623  kubectl logs -f ratings-api-869f495775-b6fkw -n rating
+  624  kubectl get pods -n rating
+  625  helm delete ratings ../chartsPoc/ --namespace rating --values values.yaml
+  626  helm delete ratings ../chartsPoc/ --namespace rating
+  627  kubectl get pods -n rating
+  628  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  629  kubectl get pods -n rating
+  630  code chartsPoc/values.yaml 
+  631  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  632  cd chartsPoc/
+  633  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  634  kubectl get pods -n ratings
+  635  ls
+  636  helm ns
+  637  kubectl -ns
+  638  kubectl get ns
+  639  kubectl delete -n -rating
+  640  kubectl delete -n rating
+  641  history
+  642  helm upgrade ratings ../chartsPoc/ --namespace rating --values values.yaml
+  643  cd chartsPoc/
+  644  helm upgrade ratings ../chartsPoc/ --namespace rating --values values.yaml
+  645  helm get pods -n rating
+  646  kubectl  get pods -n rating
+  647  code values.yaml 
+  648  ls templates/
+  649  cd templates/
+  650  cat ratings-web-deployment.yaml 
+  651  ls
+  652  cat ratings-web-ingress.yaml 
+  653  code ratings-web-ingress.yaml 
+  654  cat ratings-web-deployment.yaml 
+  655  helm template ../
+  656  code ratings-web-ingress.yaml 
+  657  kubectl get ns
+  658  kubectl get pods --namespace cert-manager
+  659  cd /etc/
+  660  ls
+  661  cd ssl
+  662  ls
+  663  cd private/
+  664  ls
+  665  cd ~
+  666  kubectl get pods --namespace cert-manager
+  667  code cluster-issuer.yaml
+  668  kubectl apply     --namespace ratingsapp     -f cluster-issuer.yaml
+  669  apiVersion: networking.k8s.io/v1beta1
+  670  kind: Ingress
+  671  metadata:
+  672  spec:
+  673  code ratings-web-ingress.yaml
+  674  kubectl apply     --namespace ratingsapp     -f ratings-web-ingress.yaml
+  675  kubectl describe cert ratings-web-cert --namespace ratingsapp
+  676  kubectl get pods -namespace ratings
+  677  kubectl get pods -namespace rating
+  678  kubectl get ns
+  679  kubectl describe pod ratings-api-869f495775-b6fkw -n rating
+  680  ls
+  681  code chartsPoc/values.yaml 
+  682  code ratings-web-ingress.yaml 
+  683  code chartsPoc/templates/ratings-web-ingress.yaml 
+  684  cd chartsPoc/templates/
+  685  helm template ../
+  686  ls
+  687  cd chartsPoc/
+  688  cd templates/
+  689  lsa
+  690  ls
+  691  vim ratings-web-
+  692  vim ratings-web-deployment.yaml 
+  693  cd ..
+  694  ls
+  695  vim values.yaml 
+  696  helm lint .
+  697  cd templates/
+  698  ls
+  699  vim ratings-web-ingress.yaml 
+  700  cd ~
+  701  ls
+  702  kubectl get nodes
+  703  kubectl get ns
+  704  kubectl get pods -n ratingsapp
+  705  kubectl get ing
+  706  kubectl get ing -n ingress
+  707  kubectl get ingress -n ingress
+  708  kubectl get ingress -n ratingsapp
+  709  ls
+  710  vim ratings-web-deployment.yaml 
+  711  cd chartsPoc/cd cg
+  712  cd chartsPoc/
+  713  ls
+  714  vim templates/ratings-web-deployment.yaml 
+  715  ls
+  716  cd chartsPoc/
+  717  cd ~
+  718  pwd
+  719  cp cluster-issuer.yaml /home/akhil/chartsPoc/templates/
+  720  cp ratings-web-ingress.yaml /home/akhil/chartsPoc/templates/ratings-web-ingress.yaml
+  721  ls chartsPoc/templates/
+  722  code chartsPoc/templates/ratings-web-ingress.yaml 
+  723  kubectl get ns
+  724  kubectl get pods -n rating
+  725  helm lint .
+  726  cd chartsPoc/
+  727  helm lint .
+  728  ls
+  729  cd templates/
+  730  ls
+  731  code ratings-web-deployment.yaml 
+  732  cd ..
+  733  code values.yaml 
+  734  helm lint .
+  735  code values.yaml 
+  736  helm upgrade ratings ../chartsPoc/ --namespace rating --values values.yaml
+  737  helm delete ratings ../chartsPoc/ --namespace rating --values values.yaml
+  738  kubectl get pods -n rating
+  739  kubectl delete pod ratings-api-869f495775-hvt4t -n rating
+  740  kubectl get pods -n rating
+  741  helm ls
+  742  kubectl delete -ns rating
+  743  helm delete ratings --namespace rating
+  744  kubectl get pods -n rating
+  745  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  746  kubectl get pods -n rating
+  747  helm delete ratings ../chartsPoc/ --namespace rating --values values.yaml
+  748  helm delete ratings ../chartsPoc/ --namespace rating
+  749  helm ls
+  750  helm version
+  751  kubectl get ns
+  752  kubectl get all -n rating 
+  753  kubectl delete ns rating
+  754  kubectl get ns 
+  755  helm install ratings ../chartsPoc/ --namespace rating --values values.yaml
+  756  helm lint .
+  757  cd templates/
+  758  helm template ../
+  759  cd ..
+  760  ls
+  761  code values.yaml 
+  762  kubectl create ns sample
+  763  helm install ratings ../chartsPoc/ --namespace sample --values values.yaml
+  764  kubectl get ns
+  765  kubectl get all -n ratingsapp
+  766  kubectl get all -n ingress
+  767  cd ..
+  768  kubectl get crd
+  769  helm install ratings ../chartsPoc/ --namespace sample --values values.yaml
+  770  helm install ratings /chartsPoc/ --namespace sample --values values.yaml
+  771  cd chartsPoc/
+  772  helm install ratings ../chartsPoc/ --namespace sample --values values.yaml
+  773  kubectl get ns
+  774  kubectl get all -n cert-manager
+  775  kubectl get crd
+  776  kubectl get ns
+  777  kubectl get pods -n cert-manger
+  778  kubectl get ns
+  779  kubectl get crd
+  780  kubectl delete -namespace ratingsapp
+  781  kubectl delete -all  -namespace ratingsapp
+  782  kubectl delete namespace --namespace=ratingsapp -all
+  783  kubectl delete ns ratingsapp
+  784  kubectl get crd
+  785  kubectl get ns
+  786  kubectl delete --namespace sample
+  787  kubectl delete ns sample
+  788  kubectl get ns
+  789  ls
+  790  kubectl get crd
+  791  kubectl delete certificaterequests.cert-manager.io
+  792  kubectl get all pods 
+  793  cd chartsPoc/
+  794  helm install ratings ../chartsPoc/ --namespace sample --values values.yaml
+  795  kubectl get ns
+  796  kubectl delete ns cert-manager
+  797  kubectl delete ns ingress
+  798  helm lint.
+  799  cd ..
+  800  helm lint .
+  801  cd chartsPoc/
+  802  helm lint .
+  803  cd templates/
+  804  helm template ../
+  805  cd ..
+  806  helm install ratings ../chartsPoc/ --namespace sample --values values.yaml
+  807  kubectl create ns Helmrepo
+  808  kubectl create ns repo
+  809  helm install ratings ../chartsPoc/ --namespace repo --values values.yaml
+  810  kubectl get crd
+  811  kubectl get ns
+  812  rm -f certificaterequests.cert-manager.io
+  813  kubectl get ns
+  814  kubectl get crd
+  815  kubectl delete certificaterequests.cert-manager.io -name
+  816  kubectl delete certificaterequests.cert-manager.io -n cert-manager
+  817  kubectl delete crd certificaterequests.cert-manager.io
+  818  kubectl delete crd certificates.cert-manager.io
+  819  kubectl delete crd challenges.acme.cert-manager.io clusterissuers.cert-manager.io 
+  820  kubectl delete crd healthstates.azmon.container.insights issuers.cert-manager.io orders.acme.cert-manager.io
+  821  kubectl get crd
+  822  helm install ratings ../chartsPoc/ --namespace repo --values values.yaml
+  823  ls templates/
+  824  vi templates/cluster-issuer.yaml 
+  825  code templates/cluster-issuer.yaml 
+  826  kubectl get ns
+  827  kubectl get pods ns default
+  828  kubectl get pods --namespace default
+  829  helm install ratings ../chartsPoc/ --values values.yaml
+  830  vi templates/cluster-issuer.yaml 
+  831  ls templates/
+  832  vi templates/ratings-web-service.yaml 
+  833  vi templates/ratings-api-deployment.yaml 
+  834  ls
+  835  cd chartsPoc/templates/
+  836  ls
+  837  cd .
+  838  cd ..
+  839  helm install ratings ../chartsPoc/ --values values.yaml
+  840  ls
+  841  cd /templates
+  842  code templates/cluster-issuer.yaml 
+  843  code values.yaml 
+  844  helm nibt .
+  845  helm lint .
+  846  helm ls
+  847  helm template .
+  848  helm template . | kubectl apply -f -
+  849  code templates/cluster-issuer.yaml 
+  850  helm template . | kubectl apply -f -
+  851  kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  852  helm template . | kubectl apply -f -
+  853  kubectl delete --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  854  kubectl delete -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  855  helm template . | kubectl delete -f -
+  856  kubectl apply --validate=false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.14/deploy/manifests/00-crds.yaml
+  857  helm install ratings ../chartsPoc/ --values values.yaml
+  858  code templates/cluster-issuer.yaml 
+  859  helm install ratings ../chartsPoc/ --values values.yaml
+  860  helm uninstall ratings ../chartsPoc/ --values values.yaml
+  861  helm uninstall ratings ../chartsPoc/
+  862  helm repo add jetstack https://charts.jetstack.io
+  863  helm repo update
+  864  helm install cert-manager     --namespace cert-manager     --version v0.14.0 \
+  865  kubectl get ns
+  866  helm install cert-manager     --namespace repo     --version v0.14.0 \
+  867  helm install cert-manager     --namespace repo     --version v0.14.0  jetstack/cert-manager
+  868  helm ls
+  869  helm ls ns repo
+  870  helm ls --namespace repo
+  871  helm upgrade cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  872  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  873  kubectl delete clusterrole cert-manager-cainjector
+  874  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  875  kubectl delete clusterrole cert-manager-controller-issuers
+  876  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  877  kubectl delete clusterrole cert-manager-controller-clusterissuers
+  878  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  879  kubectl delete clusterrole cert-manager-controller-certificates
+  880  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  881  kubectl delete clusterrole cert-manager-controller-orders
+  882  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  883  kubectl delete clusterrole cert-manager-controller-challenges
+  884  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  885  kubectl delete clusterrole cert-manager-controller-ingress-shim
+  886  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  887  kubectl delete clusterrole cert-manager-view
+  888  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  889  kubectl delete clusterrole cert-manager-edit
+  890  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  891  kubectl delete clusterrole cert-manager-cainjector" in namespace
+  892  kubectl delete clusterrole cert-manager-cainjector
+  893  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  894  kubectl delete crd
+  895  kubectl delete crb cert-manager-cainjector
+  896  kubectl delete ClusterRoleBinding cert-manager-cainjector
+  897  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  898  kubectl delete ClusterRoleBinding ert-manager-controller-issuers
+  899  kubectl delete ClusterRoleBinding cert-manager-controller-issuers
+  900  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  901  kubectl delete ClusterRoleBinding cert-manager-controller-clusterissuers
+  902  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  903  kubectl delete ClusterRoleBinding cert-manager-controller-certificates
+  904  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  905  kubectl delete ClusterRoleBinding cert-manager-controller-orders
+  906  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  907  kubectl delete ClusterRoleBinding cert-manager-controller-challenges
+  908  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  909  kubectl delete ClusterRoleBinding cert-manager-controller-ingress-shim
+  910  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  911  kubectl delete role cert-manager-cainjector:leaderelection" -- namespace "kube-system"
+  912  kubectl delete role cert-manager-cainjector:leaderelection --namespace "kube-system"
+  913  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  914  kubectl delete role cert-manager:leaderelection --namespace "kube-system"
+  915  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  916  kubectl delete role cert-manager-cainjector:leaderelection --namespace "kube-system"
+  917  kubectl delete rolebinding cert-manager-cainjector:leaderelection --namespace "kube-system"
+  918  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  919  kubectl delete rolebinding cert-manager:leaderelection --namespace "kube-system"
+  920  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  921  kubectl delete MutatingWebhookConfiguration cert-manager-webhook
+  922  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  923  kubectl delete ValidatingWebhookConfiguration cert-manager-webhook
+  924  helm install cert-manager     --namespace repo     --version v0.14.0 jetstack/cert-manager
+  925  kubectl get pods ns repo
+  926  kubectl get pods --namespace repo
+  927  ls
+  928  cd templates/
+  929  ls
+  930  cd ..
+  931  helm install ratings ../chartsPoc/ --values values.yaml
+  932  kubectl get pods --namespace repo
+  933  kubectl get pods 
+  934  history
+  935  kubectl get pods -all
+  936  kubectl get -all
+  937  kubectl get pods
+  938  cd chartsPoc/
+  939  cd templates/
+  940  ls
+  941  kubectl logs -f ratings-api-869f495775-jp26k
+  942  kubectl get nods
+  943  kubectl get nodes
+  944  kubectl get ns
+  945  az vm create     --name MyLinuxAgent     --resource-group pipeline     --image Canonical:UbuntuServer:18.04-LTS:latest     --location eastus     --size Standard_DS2_v2     --admin-username azureuser     --generate-ssh-keys
+  946  REGION_NAME=eastus
+  947  RESOURCE_GROUP=pipeline
+  948  az vm create     --name MyLinuxAgent     --resource-group $RESOURCE_GROUP     --image Canonical:UbuntuServer:18.04-LTS:latest     --location $REGION_NAME     --size Standard_DS2_v2 --admin-username azureuser     --generate-ssh-keys
+  949  az group create     --name $RESOURCE_GROUP     --location $REGION_NAME
+  950  az vm create     --name MyLinuxAgent     --resource-group $RESOURCE_GROUP     --image Canonical:UbuntuServer:18.04-LTS:latest     --location $REGION_NAME     --size Standard_DS2_v2     --admin-username azureuser     --generate-ssh-keys
+  951  az group create     --name pipe     --location eastus
+  952  az vm create     --name MyLinuxAgent     --resource-group pipe     --image Canonical:UbuntuServer:18.04-LTS:latest     --location eastus     --size Standard_DS2_v2     --admin-username azureuser     --generate-ssh-keys
+  953  az group create     --name pipe     --location eastus
+  954  az vm create     --name MyLinuxAgent     --resource-group pipe     --image Canonical:UbuntuServer:18.04-LTS:latest     --location eastus     --size Standard_DS2_v2     --admin-username azureuser     --generate-ssh-keys
+  955  az group create --name MySonarServer --location eastus
+  956  az container create -g MySonarServer --name sonarqubeaci --image sonarqube --ports 9000 --dns-name-label mysonarqubedns --cpu 2 --memory 3.5
+  957  az container create -g MySonarServer --name sonarqubeaci --image sonarqube --ports 9000 --dns-name-label mysonarqubednss --cpu 2 --memory 3.5
+  958  ls
+  959  kubectl get pods
+  960  history
+  961  history >> commands.txt
