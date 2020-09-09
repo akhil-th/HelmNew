@@ -1,16 +1,16 @@
-# Default values for chartsPoc.
+# Default values for chartspoc.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
-  repository: acr28559.azurecr.io/aksworkshopratingsapigit
+  repository: acr13691.azurecr.io/akhilthaksworkshopratingsapi
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "3"
+  tag: "5"
 image1:
-  repository: acr28559.azurecr.io/mslearnaksworkshopratingswebgit
+  repository: acr13691.azurecr.io/akhilthmslearnaksworkshopratingsweb
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "7"
@@ -54,7 +54,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: 
+    - host: chart-example.local
       paths: []
   tls: []
   #  - secretName: chart-example-tls
